@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HD Diyaliz Sıklığı Karar Destek Prototipi">
+    <meta name="robots" content="noindex, nofollow">
+    <title>HD Diyaliz Sıklığı Karar Destek Prototipi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .container { max-width: 600px; margin: 2rem auto; padding: 2rem; background-color: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151; }
+        .form-input, .form-select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 1rem; box-sizing: border-box; transition: border-color 0.3s, box-shadow 0.3s; }
+        .form-input:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); outline: none; }
+        .btn-calculate { display: block; width: 100%; padding: 0.875rem; background-color: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
+        .btn-calculate:hover { background-color: #2563eb; }
+        .result-box { margin-top: 1.5rem; padding: 1.5rem; background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; color: #3730a3; }
+        .result-box h3 { margin-top: 0; font-weight: 700; color: #312e81; }
+        .disclaimer { margin-top: 1.5rem; padding: 1rem; font-size: 0.875rem; color: #4b5563; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; }
+        .profile-note { background-color: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px; font-size: 0.9rem; color: #0c4a6e; }
+        .profile-note h4 { margin-top: 0; margin-bottom: 0.5rem; font-weight: 600; color: #075985; }
+        .profile-note ul { list-style-type: none; padding-left: 0; margin-bottom: 0; }
+        .profile-note li { margin-bottom: 0.25rem; }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1 class="text-2xl font-bold text-center mb-3 text-gray-700">HD Diyaliz Sıklığı Karar Destek (Prototip)</h1>
+        <div class="profile-note">
+            <h4>Uygulanacak Hasta Profili:</h4>
+            <ul>
+                <li>1. Haftada 2 veya 3 kez hemodiyalize giren kronik böbrek yetmezliği hastaları;</li>
+                <li>2. Rezidüel idrar çıkışı ≥ 500 ml/gün olan hastalar</li>
+                <li>3. Serum kreatinin < 4 mg/dl</li>
+                <li>4. Diyaliz sıklığı azaltma talebi olan hastalar</li>
+            </ul>
+        </div>
+        <form id="dialysisForm">
+            <div>
+                <label for="idrar_hacmi" class="form-label">1. 24 Saatlik İdrar Hacmi (ml/gün):</label>
+                <input type="number" id="idrar_hacmi" class="form-input" placeholder="Örn: 600" required>
+            </div>
+            <div>
+                <label for="kreatinin_klirensi" class="form-label">2. Kreatinin Klirensi (ml/dk):</label>
+                <input type="number" id="kreatinin_klirensi" class="form-input" placeholder="Örn: 12" required>
+            </div>
+            <div>
+                <label for="serum_kreatinin" class="form-label">3. Serum Kreatinin (mg/dl):</label>
+                <input type="number" id="serum_kreatinin" step="0.1" class="form-input" placeholder="Örn: 3.5" required>
+            </div>
+            <div>
+                <label for="interdiyalitik_kilo_alimi_yuzde" class="form-label">4. İnterdiyalitik Kilo Alımı (% kuru kilo):</label>
+                <input type="number" id="interdiyalitik_kilo_alimi_yuzde" step="0.1" class="form-input" placeholder="Örn: 3.5" required>
+            </div>
+            <div>
+                <label for="geri_odeme_riski_var" class="form-label">5. Geri Ödeme Riski VAR mı? (Serum Kreatinin < 4mg/dl ise geçerli)</label>
+                <select id="geri_odeme_riski_var" class="form-select">
+                    <option value="false">Hayır (Risk YOK)</option>
+                    <option value="true">Evet (Risk VAR)</option>
+                </select>
+            </div>
+            <button type="button" onclick="hesaplaDiyalizSikligi()" class="btn-calculate mt-4">Sıklığı Hesapla</button>
+        </form>
+        <div id="sonucAlani" class="result-box" style="display: none;">
+            <h3>Önerilen Diyaliz Sıklığı / Durum:</h3>
+            <p id="sonucMetni"></p>
+            <p id="gerekceMetni" class="text-sm mt-2"></p>
+        </div>
+        <div class="disclaimer">
+            <p><strong>UYARI:</strong> Bu uygulama yalnızca bir prototip ve karar destek aracıdır. Sağlanan bilgiler tıbbi tavsiye niteliğinde değildir ve profesyonel tıbbi değerlendirmenin veya bir doktorun tedavisinin yerini almaz. Tüm tıbbi kararlar, hastanın durumunu tam olarak değerlendirebilecek kalifiye bir sağlık uzmanı tarafından verilmelidir. Bu araç, güncel SGK yönetmeliklerini ve tüm bireysel hasta faktörlerini tam olarak yansıtmayabilir. Herhangi bir tedavi kararı almadan önce mutlaka doktorunuza danışınız.</p>
+        </div>
+    </div>
+    <script>
+        function getDialysisFrequency(idrar_hacmi_str, kreatinin_klirensi_str, serum_kreatinin_str, interdiyalitik_kilo_alimi_yuzde_str, geri_odeme_riski_var_str) {
+            const idrar_hacmi = parseFloat(idrar_hacmi_str);
+            const kreatinin_klirensi = parseFloat(kreatinin_klirensi_str);
+            const serum_kreatinin = parseFloat(serum_kreatinin_str);
+            const interdiyalitik_kilo_alimi_yuzde = parseFloat(interdiyalitik_kilo_alimi_yuzde_str);
+            const geri_odeme_riski_var = (geri_odeme_riski_var_str === 'true');
+
+            let öneri = "";
+            let gerekce = "";
+
+            if (isNaN(idrar_hacmi) || isNaN(kreatinin_klirensi) || isNaN(serum_kreatinin) || isNaN(interdiyalitik_kilo_alimi_yuzde)) {
+                öneri = "Hatalı Giriş";
+                gerekce = "Lütfen tüm alanları geçerli sayılarla doldurun.";
+                return { öneri, gerekce };
+            }
+
+            if (kreatinin_klirensi > 10) {
+                öneri = "Diyalizden çıkabilir (Uzman Değerlendirmesi Gerekli)";
+                gerekce = "Gerekçe: Kreatinin klirensi > 10 ml/dk. Başka gerekçeler varsa tetkikler yenilenmeli, nefroloji uzmanına danışılmalı.";
+                return { öneri, gerekce };
+            }
+            if (kreatinin_klirensi <= 3) {
+                öneri = "Kesinlikle haftada 3 kez girmeli";
+                gerekce = "Gerekçe: Kreatinin klirensi <= 3 ml/dk.";
+                return { öneri, gerekce };
+            }
+            if (idrar_hacmi < 500) {
+                öneri = "Haftada 3 kez diyaliz (Yüksek İhtimal)";
+                gerekce = "Gerekçe: Kreatinin klirensi 3-10 ml/dk, ama idrar hacmi < 500 ml/gün. Uzman görüşü alın.";
+                return { öneri, gerekce };
+            }
+            if (idrar_hacmi === 500) {
+                öneri = "Ek Değerlendirme Gerekli (Sınır Durum)";
+                gerekce = "Gerekçe: İdrar hacmi 500 ml/gün, net sonuç için uzman görüşü gerekli.";
+                return { öneri, gerekce };
+            }
+            if (idrar_hacmi > 500) {
+                if (interdiyalitik_kilo_alimi_yuzde > 3) {
+                    öneri = "Yine haftada 3 düşünülmelidir";
+                    gerekce = "Gerekçe: İdrar > 500 ml/gün, ama kilo alımı > %3.";
+                } else {
+                    if (serum_kreatinin >= 4) {
+                        öneri = "Haftada 2 kez diyaliz";
+                        gerekce = "Gerekçe: İdrar > 500 ml/gün, kilo alımı ≤ %3, serum kreatinin ≥ 4 mg/dl.";
+                    } else {
+                        if (geri_odeme_riski_var) {
+                            öneri = "Haftada 1 kez diyaliz (Sıklık azaltılabilir)";
+                            gerekce = "Gerekçe: İdrar > 500 ml/gün, kilo alımı ≤ %3, serum kreatinin < 4 mg/dl, geri ödeme riski var.";
+                        } else {
+                            öneri = "Haftada 2 kez diyalize devam et";
+                            gerekce = "Gerekçe: İdrar > 500 ml/gün, kilo alımı ≤ %3, serum kreatinin < 4 mg/dl, geri ödeme riski yok.";
+                        }
+                    }
+                }
+            } else {
+                öneri = "Belirlenemedi / Algoritma Hatası";
+                gerekce = "Beklenmedik durum. Geliştirici ile iletişime geçin.";
+            }
+            if (!öneri) {
+                öneri = "Belirlenemedi";
+                gerekce = "Parametreler için net sonuç üretilemedi. Uzmana danışın.";
+            }
+            return { öneri, gerekce };
+        }
+
+        function hesaplaDiyalizSikligi() {
+            const idrar_hacmi = document.getElementById('idrar_hacmi').value;
+            const kreatinin_klirensi = document.getElementById('kreatinin_klirensi').value;
+            const serum_kreatinin = document.getElementById('serum_kreatinin').value;
+            const interdiyalitik_kilo_alimi_yuzde = document.getElementById('interdiyalitik_kilo_alimi_yuzde').value;
+            const geri_odeme_riski_var = document.getElementById('geri_odeme_riski_var').value;
+
+            const sonuc = getDialysisFrequency(idrar_hacmi, kreatinin_klirensi, serum_kreatinin, interdiyalitik_kilo_alimi_yuzde, geri_odeme_riski_var);
+
+            document.getElementById('sonucMetni').textContent = sonuc.öneri;
+            document.getElementById('gerekceMetni').textContent = sonuc.gerekce;
+            document.getElementById('sonucAlani').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
